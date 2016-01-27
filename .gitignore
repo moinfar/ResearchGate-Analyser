@@ -1,0 +1,10 @@
+/venv
+*.pyc
+*.pyo
+*.db
+local_settings.py
+migrations/
+website/static
+website/media
+website/gunicorn.*
+
