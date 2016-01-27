@@ -156,6 +156,7 @@ def crawl_publication_page(crawl_info_id, publication_id):
     if DocInfo.objects.filter(current_crawl_info=crawl_info, doc_id=publication_id).count() > 0:
         crawl_info.queue_size -= 1
         crawl_info.save()
+        pprint("SKIP: publication with id `%d` has been fetched before." % publication_id)
         return
 
     crawl_info.successful_crawls += 1
