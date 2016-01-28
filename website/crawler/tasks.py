@@ -166,6 +166,12 @@ def crawl_publication_page(crawl_info_id, publication_id):
     if crawl_info.successful_crawls >= crawl_info.limit:
         return
 
+    if os.path.isfile('crawl_result/%d/%d.json' % (crawl_info.id, publication_id)):
+        crawl_info.queue_size -= 1
+        crawl_info.save()
+        pprint("SKIP: publication with id `%d` has been fetched before." % publication_id)
+        return
+
     try:
         publication_data = InformationParser.get_publication_data(publication_id)
     except Exception as e:
