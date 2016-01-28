@@ -5,6 +5,8 @@ class CrawlInfo(models.Model):
     start = models.DateTimeField(verbose_name='timestamp', auto_now=True)
     init_url = models.CharField(max_length=1024, verbose_name='initial url')
     limit = models.IntegerField(verbose_name='limit')
+    i_limit = models.IntegerField(verbose_name='input degree limit')
+    o_limit = models.IntegerField(verbose_name='output degree limit')
     successful_crawls = models.IntegerField(verbose_name='successful crawls', default=0)
     queue_size = models.IntegerField(verbose_name='queue size', default=0)
 
