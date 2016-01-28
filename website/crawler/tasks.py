@@ -21,6 +21,8 @@ class Statics:
 
 
 class InformationDownloader:
+    request_session = None
+
     @staticmethod
     def get_researcher_id_from_url(url):
         right_hand_side = url.split("researcher/")[-1]
@@ -37,7 +39,7 @@ class InformationDownloader:
             'authority': 'www.researchgate.net',
             'accept': 'text/html,application/xhtml+xml,application/xml',
         }
-        r = requests.get(url, headers=headers)
+        r = InformationDownloader.request_session.get(url, headers=headers)
         return r.text
 
     @staticmethod
@@ -47,7 +49,7 @@ class InformationDownloader:
             'accept': 'application/json',
             'x-requested-with': 'XMLHttpRequest',
         }
-        r = requests.get(url, headers=headers)
+        r = InformationDownloader.request_session.get(url, headers=headers)
         return json.loads(r.text)
 
 
@@ -214,3 +216,6 @@ def start_crawl(crawl_info_id, max_publication_link):
     for publication_id in publication_ids:
         crawl_publication_page.delay(crawl_info_id, publication_id)
 
+
+print("New HTTP Connection Created :D")
+InformationDownloader.request_session = requests.session()
