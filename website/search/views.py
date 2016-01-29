@@ -3,9 +3,10 @@ import json
 
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.shortcuts import redirect
 from crawler.models import CrawlInfo
-from crawler.tasks import InformationDownloader, start_crawl, crawl_publication_page
+from django.shortcuts import redirect
+from elasticsearch import Elasticsearch
+from search.tasks import index_fetched_publications
 
 
 def home_page(request):
@@ -17,39 +18,76 @@ def home_page(request):
 
 
 def search_page(request):
-    pass
-    return render(request, 'search.html')
+    result = None
+    if request.GET.get('q') is not None and request.GET.get('q') != '':
+        q = request.GET.get('q')
+        w_title = request.GET.get('title_weight')
+        w_abstract = request.GET.get('abstract_weight')
+        w_authors = request.GET.get('author_weight')
+        w_page_rank = request.GET.get('PR_weight')
+        limit = request.GET.get('limit', 30)
+        es = Elasticsearch()
+        es.indices.refresh(index="global-index")
+        # search_query = {
+        #     "query": {
+        #         "bool": {
+        #             "should": [
+        #                 {"match": {
+        #                     "title": {
+        #                         "query": "learn",
+        #                         "boost": 3
+        #                     }
+        #                 }},
+        #                 {"match": {
+        #                     "abstract": {
+        #                         "query": "learn",
+        #                         "boost": 1
+        #                     }
+        #                 }}
+        #             ]
+        #         }
+        #     }
+        # }
+        search_query = {
+            "query": {
+                "multi_match": {
+                    "query":    q,
+                    "type":     "cross_fields",
+                    "fields":   ["title^%s" % w_title, "abstract^%s" % w_abstract, "authors.name^%s" % w_authors]
+                }
+            },
+            "size": limit,
+        }
+        res = es.search(index="global-index", body=search_query)
+        result = res['hits']
 
-def crawl_page(request):
-    if request.GET.get('urls') is not None:
-        urls = request.GET.get('urls').split("\n")
-        crawl_info = CrawlInfo(init_url=request.GET.get('urls'), limit=request.GET.get('limit'),
-                               i_limit=request.GET.get('in_degree_limit'), o_limit=request.GET.get('out_degree_limit'))
-        crawl_info.save()
+    return render(request, 'search.html', {'request': request, 'result': result})
 
-        if not os.path.exists("crawl_result"):
-            os.makedirs("crawl_result")
 
-        if not os.path.exists("crawl_result/%d" % crawl_info.id):
-            os.makedirs("crawl_result/%d" % crawl_info.id)
+def indexing_page(request):
+    if request.GET.get('crawl_id') is not None and request.GET.get('crawl_id') != '':
+        crawl_info = CrawlInfo.objects.get(id=request.GET.get('crawl_id'))
+        index_fetched_publications.delay(crawl_info.id)
+        return redirect("/indexing/status/%d/" % crawl_info.id)
 
-        for url in urls:
-            if "/publication/" in url:
-                crawl_publication_page.delay(crawl_info.id, InformationDownloader.get_publication_id_from_url(url))
-            else:
-                start_crawl.delay(crawl_info.id, int(request.GET.get('out_degree_limit')))
+    crawls_info = CrawlInfo.objects.all()
+    return render(request, 'indexing.html', {'crawls_info': crawls_info})
 
-        return redirect("/crawl/status/%d/" % crawl_info.id)
 
-    return render(request, 'crawl.html')
-
-def crawl_status_page(request, id):
+def indexing_status_page(request, id):
+    es = Elasticsearch()
     crawl_info = CrawlInfo.objects.get(id=id)
-    crawled_pages_num = crawl_info.successful_crawls
+    try:
+        es.indices.refresh(index="index-%d" % crawl_info.id)
+        percentage = int(es.count("index-%d" % crawl_info.id, "publication").get('count') * 100 /
+                         crawl_info.successful_crawls)
+        percentage = max(1, percentage)
+    except:
+        percentage = 0
 
     if request.GET.get('type', 'HTML') == 'JSON':
-        result = json.dumps({'status': 'OK', 'percent': max(1, int(100*crawled_pages_num/crawl_info.limit))},
+        result = json.dumps({'status': 'OK', 'percent': percentage},
                             ensure_ascii=False, encoding='utf8')
         return HttpResponse(result, content_type='application/json; charset=utf-8')
 
-    return render(request, 'crawl_status.html', {'percent': max(1, int(100*crawled_pages_num/crawl_info.limit))})
+    return render(request, 'indexing_status.html', {'percent': percentage})
