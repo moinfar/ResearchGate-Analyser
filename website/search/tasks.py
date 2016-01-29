@@ -26,3 +26,23 @@ def index_fetched_publications(crawl_info_id):
     for page in pages:
         index_fetched_publication(es, "index-%s" % crawl_info.id,
                                   'managed_data/crawled_publications/%d/%s' % (crawl_info.id, page))
+
+
+def index_fetched_author(es, index, path):
+    with open(path, 'r') as infile:
+        author_info = json.load(infile)
+        es.index(index=index, doc_type='author', id=author_info.get('id'), body=author_info)
+        es.index(index="global-authors-index", doc_type='author', id=author_info.get('id'), body=author_info)
+
+    # es.indices.refresh(index=index)
+
+
+@shared_task
+def index_fetched_authors(crawl_info_id):
+    es = Elasticsearch()
+    crawl_info = CrawlInfo.objects.get(id=crawl_info_id)
+    pages = os.listdir('managed_data/crawled_authors/%d' % crawl_info.id)
+
+    for page in pages:
+        index_fetched_author(es, "index-%s" % crawl_info.id,
+                             'managed_data/crawled_authors/%d/%s' % (crawl_info.id, page))

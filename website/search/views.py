@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from crawler.models import CrawlInfo
 from django.shortcuts import redirect
 from elasticsearch import Elasticsearch
-from search.tasks import index_fetched_publications
+from search.tasks import index_fetched_publications, index_fetched_authors
 
 
 def home_page(request):
@@ -74,15 +74,25 @@ def indexing_page(request):
     return render(request, 'indexing.html', {'crawls_info': crawls_info})
 
 
+def indexing_authors(request):
+    if request.GET.get('crawl_id') is not None and request.GET.get('crawl_id') != '':
+        crawl_info = CrawlInfo.objects.get(id=request.GET.get('crawl_id'))
+        index_fetched_authors.delay(crawl_info.id)
+        return redirect("/indexing/status/%d/" % crawl_info.id)
+
+    crawls_info = CrawlInfo.objects.filter(type="author")
+    return render(request, 'indexing.html', {'crawls_info': crawls_info})
+
+
 def indexing_status_page(request, id):
     es = Elasticsearch()
     crawl_info = CrawlInfo.objects.get(id=id)
     try:
         es.indices.refresh(index="index-%d" % crawl_info.id)
-        percentage = int(es.count("index-%d" % crawl_info.id, "publication").get('count') * 100 /
+        percentage = int(es.count("index-%d" % crawl_info.id, crawl_info.type).get('count') * 100 /
                          crawl_info.successful_crawls)
         percentage = max(1, percentage)
-    except:
+    except Exception as e:
         percentage = 0
 
     if request.GET.get('type', 'HTML') == 'JSON':
@@ -91,3 +101,5 @@ def indexing_status_page(request, id):
         return HttpResponse(result, content_type='application/json; charset=utf-8')
 
     return render(request, 'indexing_status.html', {'percent': percentage})
+
+

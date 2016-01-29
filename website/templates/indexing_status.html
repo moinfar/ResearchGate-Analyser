@@ -43,6 +43,8 @@
 
 
 <script>
+var interval = window.setInterval(refresh, 1000);
+
 function refresh() {
     $.getJSON("./?type=JSON", function(data) {
 
@@ -53,10 +55,11 @@ function refresh() {
             $('#crawl_progress').data("percent", data.percent);
             $('#crawl_progress').progress();
             $('#crawl_label').html(data.percent + "% Indexed");
+            if (data.percent == 100)
+                clearInterval(interval);
         }
     });
 }
-window.setInterval(refresh, 1000);
 
 $('#crawl_progress').progress();
 </script>

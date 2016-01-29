@@ -45,7 +45,7 @@ def crawl_author_page(request):
     if request.GET.get('urls') is not None:
         urls = request.GET.get('urls').split("\n")
         crawl_info = CrawlInfo(init_url=request.GET.get('urls'), limit=request.GET.get('limit'),
-                               i_limit=0, o_limit=request.GET.get('branch_factor'))
+                               i_limit=0, o_limit=request.GET.get('branch_factor'), type='author')
         crawl_info.save()
 
         if not os.path.exists("managed_data/crawled_authors/%d" % crawl_info.id):
