@@ -9,6 +9,7 @@ class CrawlInfo(models.Model):
     o_limit = models.IntegerField(verbose_name='output degree limit')
     successful_crawls = models.IntegerField(verbose_name='successful crawls', default=0)
     queue_size = models.IntegerField(verbose_name='queue size', default=0)
+    type = models.CharField(max_length=64, default='publication')
 
     class Meta:
         verbose_name = 'crawl info'

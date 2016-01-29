@@ -10,8 +10,8 @@ from search.tasks import index_fetched_publications
 
 
 def home_page(request):
-    if CrawlInfo.objects.all().exists():
-        last_crawl_id = CrawlInfo.objects.latest('id').id
+    if CrawlInfo.objects.filter(type="publication").exists():
+        last_crawl_id = CrawlInfo.objects.filter(type="publication").latest('id').id
     else:
         last_crawl_id = -1
     return render(request, 'home.html', {'last_crawl_id': last_crawl_id})
@@ -70,7 +70,7 @@ def indexing_page(request):
         index_fetched_publications.delay(crawl_info.id)
         return redirect("/indexing/status/%d/" % crawl_info.id)
 
-    crawls_info = CrawlInfo.objects.all()
+    crawls_info = CrawlInfo.objects.filter(type="publication")
     return render(request, 'indexing.html', {'crawls_info': crawls_info})
 
 

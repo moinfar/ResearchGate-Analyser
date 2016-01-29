@@ -20,6 +20,7 @@ urlpatterns = [
     # url(r'^admin/', include(admin.site.urls)),
     url(r'^$', 'search.views.home_page'),
     url(r'^crawl/$', 'crawler.views.crawl_page'),
+    url(r'^crawl/authors/$', 'crawler.views.crawl_author_page'),
     url(r'^crawl/status/(?P<id>\d+)/$', 'crawler.views.crawl_status_page'),
     url(r'^indexing/$', 'search.views.indexing_page'),
     url(r'^indexing/status/(?P<id>\d+)/$', 'search.views.indexing_status_page'),

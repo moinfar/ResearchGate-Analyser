@@ -1,3 +1,5 @@
+import os
+
 from django.core.management.base import BaseCommand, CommandError
 from crawler.tasks import start_crawl
 from crawler.models import CrawlInfo
@@ -14,4 +16,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         crawl_info = CrawlInfo(init_url=options['url'][0], limit=options['limit'])
         crawl_info.save()
+
+        if not os.path.exists("managed_data/crawled_publications/%d" % crawl_info.id):
+            os.makedirs("managed_data/crawled_publications/%d" % crawl_info.id)
+
         start_crawl.delay(crawl_info.id, options['N'][0])

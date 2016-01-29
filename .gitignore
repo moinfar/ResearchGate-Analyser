@@ -4,7 +4,7 @@
 *.db
 local_settings.py
 migrations/
-crawl_result/
+managed_data/
 website/static
 website/media
 website/gunicorn.*
