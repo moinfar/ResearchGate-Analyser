@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import json
+import random
 import requests
 
 from pprint import pprint
@@ -37,6 +38,9 @@ class InformationDownloader:
 
     @staticmethod
     def get_html_content(url):
+
+        # print("<<<  " + url)
+
         headers = {
             'authority': 'www.researchgate.net',
             'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -46,6 +50,10 @@ class InformationDownloader:
                           '(KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36',
             'referer': InformationDownloader.referer,
         }
+
+        if random.random() < 0.02:
+            InformationDownloader.request_session = requests.session()
+
         # print(InformationDownloader.cookies)
         r = InformationDownloader.request_session.get(url, headers=headers, cookies=InformationDownloader.cookies)
         if requests.utils.dict_from_cookiejar(r.cookies):
@@ -159,7 +167,7 @@ class InformationParser:
 
     @staticmethod
     def get_author_info(author_id):
-        publication_ids = []
+        publication_ids = set()
         co_author_ids = []
         name = None
         page = 1
@@ -167,6 +175,8 @@ class InformationParser:
             url = "https://www.researchgate.net/researcher/%d/publications/%d" % (author_id, page)
             content = InformationDownloader.get_html_content(url)
             soup = BeautifulSoup(content, 'html.parser')
+
+            previous_publication_ids = set(publication_ids)
 
             if len(soup.select(".ga-profile-header-name")) > 0:
                 name = name or soup.select(".ga-profile-header-name")[0].string
@@ -176,7 +186,7 @@ class InformationParser:
                     break
 
                 for link in publication_links:
-                    publication_ids.append(link.get('href'))
+                    publication_ids.add(link.get('href'))
             else:
                 name = name or soup.select(".profile-header-name span")[0].string
 
@@ -186,12 +196,15 @@ class InformationParser:
                     break
 
                 for link_desc in link_descs:
-                    publication_ids.append(InformationDownloader.
-                                           get_publication_id_from_url(link_desc.find_next_sibling().get('href')))
+                    publication_ids.add(InformationDownloader.
+                                        get_publication_id_from_url(link_desc.find_next_sibling().get('href')))
 
             co_authors = soup.select('a[href^="researcher/"]')
             for co_author in co_authors:
                 co_author_ids.append(InformationDownloader.get_researcher_id_from_url(co_author.get('href')))
+
+            if len(previous_publication_ids) == len(publication_ids):
+                break
 
             page += 1
 
@@ -200,7 +213,7 @@ class InformationParser:
             co_author_ids.remove(author_id)
         co_author_ids = list(co_author_ids)
 
-        return {'id': author_id, 'name': name,'publications': publication_ids, 'co_authors': co_author_ids}
+        return {'id': author_id, 'name': name, 'publications': list(publication_ids), 'co_authors': co_author_ids}
 
 
 
