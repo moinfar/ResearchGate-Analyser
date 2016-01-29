@@ -186,7 +186,7 @@ class InformationParser:
                     break
 
                 for link in publication_links:
-                    publication_ids.add(link.get('href'))
+                    publication_ids.add(InformationDownloader.get_publication_id_from_url(link.get('href')))
             else:
                 name = name or soup.select(".profile-header-name span")[0].string
 
