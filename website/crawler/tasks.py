@@ -22,6 +22,8 @@ class Statics:
 
 class InformationDownloader:
     request_session = None
+    cookies = None
+    referer = Statics.base_address
 
     @staticmethod
     def get_researcher_id_from_url(url):
@@ -37,9 +39,18 @@ class InformationDownloader:
     def get_html_content(url):
         headers = {
             'authority': 'www.researchgate.net',
-            'accept': 'text/html,application/xhtml+xml,application/xml',
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'accept-language': 'en-US,en;q=0.8',
+            'accept-encoding': 'gzip, deflate, sdch',
+            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
+                          '(KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36',
+            'referer': InformationDownloader.referer,
         }
-        r = InformationDownloader.request_session.get(url, headers=headers)
+        # print(InformationDownloader.cookies)
+        r = InformationDownloader.request_session.get(url, headers=headers, cookies=InformationDownloader.cookies)
+        if requests.utils.dict_from_cookiejar(r.cookies):
+            InformationDownloader.cookies = requests.utils.dict_from_cookiejar(r.cookies)
+        InformationDownloader.referer = url
         return r.text
 
     @staticmethod
@@ -47,9 +58,17 @@ class InformationDownloader:
         headers = {
             'authority': 'www.researchgate.net',
             'accept': 'application/json',
+            'accept-language': 'en-US,en;q=0.8',
+            'accept-encoding': 'gzip, deflate, sdch',
             'x-requested-with': 'XMLHttpRequest',
+            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
+                          '(KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36',
+            'referer': InformationDownloader.referer,
         }
-        r = InformationDownloader.request_session.get(url, headers=headers)
+        # print(InformationDownloader.cookies)
+        r = InformationDownloader.request_session.get(url, headers=headers, cookies=InformationDownloader.cookies)
+        if requests.utils.dict_from_cookiejar(r.cookies):
+            InformationDownloader.cookies = requests.utils.dict_from_cookiejar(r.cookies)
         return json.loads(r.text)
 
 
@@ -247,6 +266,7 @@ def start_crawl(crawl_info_id, max_publication_link):
     crawl_info = CrawlInfo.objects.get(id=crawl_info_id)
 
     publication_ids = InformationParser.extract_publication_ids_in_a_page(crawl_info.init_url)
+    print(crawl_info.init_url)
     publication_ids = publication_ids[:max_publication_link]
     for publication_id in publication_ids:
         crawl_publication_page.delay(crawl_info_id, publication_id)
