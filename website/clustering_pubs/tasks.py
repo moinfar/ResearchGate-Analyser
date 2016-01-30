@@ -19,23 +19,23 @@ def cluster_index(index_name, k=-1):
     dci = DocClusteringInfo.objects.get(index_name=index_name)
 
     dci.status = 'Retrieving Documents'
-    dataset = retrieve_dataset(index_name, dci.doc_type)
     dci.save()
+    dataset = retrieve_dataset(index_name, dci.doc_type)
 
     dci.status = 'Clustering Data'
+    dci.save()
     if k < 2:
         find_clusters(list(dataset.values()), dci)
     else:
         KMeans.compute_means(list(dataset.values()), k, dci)
-    dci.save()
 
     dci.status = 'Labeling Clusters'
-    labels = label_clusters(index_name, dci.doc_type, list(dataset.values()), k)
     dci.save()
+    labels = label_clusters(index_name, dci.doc_type, list(dataset.values()), k)
 
     dci.status = 'Updating Index'
-    update_index(index_name, dci.doc_type, dataset, labels)
     dci.save()
+    update_index(index_name, dci.doc_type, dataset, labels)
 
     dci.status = 'Idle'
     dci.save()

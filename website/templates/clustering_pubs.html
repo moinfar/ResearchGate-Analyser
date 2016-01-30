@@ -33,17 +33,20 @@
         <a href="/"><img class="ui fluid image" src="/static/header.png"></a>
         <form class="ui large form">
             <div class="ui segment" style="margin:0px;">
-                <select name="index_name" class="ui fluid dropdown">
-                    <option value="">Select Index</option>
-                    {% for index_name, index_data in indexes.items %}
-                        {% if index_data.mappings.publication %}
-                            <option value="{{ index_name }}">{{ index_name }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-
-                <br>
-                <input class="ui fluid green button" type="submit" value="Cluster Please">
+                <div class="ui input">
+                    <input class="ui fluid" type="number" placeholder="K" min="3" multiple="1" name="k">
+                </div>
+                <div class="ui action input">
+                    <select name="index_name" class="ui fluid dropdown">
+                        <option value="">Select Index</option>
+                        {% for index_name, index_data in indexes.items %}
+                            {% if index_data.mappings.publication %}
+                                <option value="{{ index_name }}">{{ index_name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="ui button">Search</button>
+                </div>
             </div>
         </form>
 
