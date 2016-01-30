@@ -30,4 +30,5 @@ urlpatterns = [
     url(r'^clustering_pubs/$', 'clustering_pubs.views.clustering_pubs_page'),
     url(r'^clustering_pubs/status/(?P<index_name>[a-z0-9-]+)/$', 'clustering_pubs.views.clustering_pubs_status_page'),
     url(r'^calculate/pagerank/$', 'search.views.calculate_pagerank'),
+    url(r'^pagerank/status/(?P<id>\d+)/$', 'search.views.pagerank_status_page'),
 ]

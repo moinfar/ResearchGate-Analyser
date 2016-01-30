@@ -1,12 +1,15 @@
 import os
 import json
+import numpy
 
+from search.models import JobInfo
 from django.shortcuts import render
 from django.http import HttpResponse
 from crawler.models import CrawlInfo
 from django.shortcuts import redirect
 from elasticsearch import Elasticsearch
 from search.tasks import index_fetched_publications, index_fetched_authors
+from search.tasks import calculate_pagerank_and_insert_to_elasticsearch
 
 
 def home_page(request):
@@ -131,3 +134,36 @@ def indexing_status_page(request, id):
     return render(request, 'indexing_status.html', {'percent': percentage})
 
 
+def calculate_pagerank(request):
+    es = Elasticsearch()
+
+    if request.GET.get('index_id') is not None and request.GET.get('index_id') != '':
+        index_id = request.GET.get('index_id')
+        alpha = float(request.GET.get('alpha'))
+
+        job_info = JobInfo(title='calculating PageRank for %s with alpha = %d' % (index_id, alpha),
+                       info=json.dumps({'message': 'Starting ...', 'percentage': 3}))
+        job_info.save()
+
+        calculate_pagerank_and_insert_to_elasticsearch.delay(index_id, alpha, job_info.id)
+
+        return redirect('/pagerank/status/%d/' % job_info.id)
+
+    indexes = es.indices.get_mapping()
+    return render(request, 'calculate_pagerank.html', {'indexes': indexes})
+
+
+def pagerank_status_page(request, id):
+
+    job_info = JobInfo.objects.get(id=id)
+    info = json.loads(job_info.info)
+
+    percentage = info['percentage']
+    action = info['message']
+
+    if request.GET.get('type', 'HTML') == 'JSON':
+        result = json.dumps({'status': 'OK', 'percent': percentage, 'message': action},
+                            ensure_ascii=False, encoding='utf8')
+        return HttpResponse(result, content_type='application/json; charset=utf-8')
+
+    return render(request, 'PR_status.html', {'percent': percentage, 'message': action})
