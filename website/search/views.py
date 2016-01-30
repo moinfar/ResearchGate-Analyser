@@ -76,15 +76,47 @@ def search_page(request):
             }
         else:
             search_query = {
-                "query": {
-                    "multi_match": {
-                        "query":    q,
-                        "type":     "cross_fields",
-                        "fields":   ["title^%s" % w_title, "abstract^%s" % w_abstract, "authors.name^%s" % w_authors]
-                    },
+                'query': {
+                    'function_score': {
+                        'functions': [
+                            {
+                                'script_score': {
+                                    'script': "%s * doc['PR'].value" % w_page_rank
+                                }
+                            }
+                        ],
+                        'query': {
+                            'multi_match': {
+                                'query':    q,
+                                'type':     'cross_fields',
+                                'fields':   ['title^%s' % w_title, 'abstract^%s' % w_abstract, 'authors.name^%s' % w_authors]
+                            },
+                        },
+                        'filter': {
+                            'exists': {
+                                'field': 'PR'
+                            }
+                        },
+                        'score_mode': 'sum',
+                    }
                 },
                 "size": limit,
             }
+            # search_query = {
+            #     "query": {
+            #         "custom_score": {
+            #             "query": {
+            #                 "multi_match": {
+            #                     "query":    q,
+            #                     "type":     "cross_fields",
+            #                     "fields":   ["title^%s" % w_title, "abstract^%s" % w_abstract, "authors.name^%s" % w_authors]
+            #                 },
+            #             },
+            #             "script": "_score * 2"
+            #         }
+            #     },
+            #     "size": limit,
+            # }
 
         res = es.search(index="global-index", body=search_query)
         result = res['hits']
@@ -143,7 +175,7 @@ def calculate_pagerank(request):
         alpha = float(request.GET.get('alpha'))
 
         job_info = JobInfo(title='calculating PageRank for %s with alpha = %d' % (index_id, alpha),
-                       info=json.dumps({'message': 'Starting ...', 'percentage': 3}))
+                           info=json.dumps({'message': 'Starting ...', 'percentage': 3}))
         job_info.save()
 
         calculate_pagerank_and_insert_to_elasticsearch.delay(index_id, alpha, job_info.id)

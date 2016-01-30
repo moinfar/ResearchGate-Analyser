@@ -126,6 +126,7 @@ def calculate_pagerank_and_insert_to_elasticsearch(index_id, alpha, job_info_id)
         uid = mapper.get_uid(sid)
         PR = probability_vector[0, sid] / max_PR
         es.update(index=index_id, doc_type='publication', id=str(uid), body={"doc": {'PR': PR}})
+        es.update(index='global-index', doc_type='publication', id=str(uid), body={"doc": {'PR': PR}})
 
     job_info.info = json.dumps({'message': 'Fenitto ...', 'percentage': 100})
     job_info.save()

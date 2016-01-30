@@ -40,7 +40,7 @@
                     </div>
                     <div class="four wide column">
                         <div class="ui fluid input">
-                            <select name="title_weight" class="ui fluid dropdown">
+                            <select name="title_weight" class="ui title_f fluid dropdown">
                                 <option value="1">Title: 1.0</option>
                                 <option value="1.2">Title: 1.2</option>
                                 <option value="1.4">Title: 1.4</option>
@@ -54,7 +54,7 @@
                     </div>
                     <div class="three wide column">
                         <div class="ui fluid input">
-                            <select name="abstract_weight" class="ui fluid dropdown">
+                            <select name="abstract_weight" class="ui abstract_f fluid dropdown">
                                 <option value="1">Abstract: 1.0</option>
                                 <option value="1.2">Abstract: 1.2</option>
                                 <option value="1.4">Abstract: 1.4</option>
@@ -68,7 +68,7 @@
                     </div>
                     <div class="three wide column">
                         <div class="ui fluid input">
-                            <select name="author_weight" class="ui fluid dropdown">
+                            <select name="author_weight" class="ui author_f fluid dropdown">
                                 <option value="1">Author: 1.0</option>
                                 <option value="1.2">Author: 1.2</option>
                                 <option value="1.4">Author: 1.4</option>
@@ -82,7 +82,7 @@
                     </div>
                     <div class="four wide column">
                         <div class="ui fluid input">
-                            <select name="PR_weight" class="ui fluid dropdown">
+                            <select name="PR_weight" class="ui PR_f fluid dropdown">
                                 <option value="0">PageRank: 0</option>
                                 <option value="0.2">PageRank: 0.2</option>
                                 <option value="0.5">PageRank: 0.5</option>
@@ -162,7 +162,7 @@
                             Category: {{ item|get:"_source"|get:"cluster_label"}} &nbsp;&nbsp;&nbsp;&nbsp;
                         </div>
                         <div class="right floated meta">
-                            PageRank: 10
+                            PageRank: {{ item|get:"_source"|get:"PR"}}
                         </div>
                     </div>
                 </div>
