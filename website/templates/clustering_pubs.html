@@ -33,11 +33,12 @@
         <a href="/"><img class="ui fluid image" src="/static/header.png"></a>
         <form class="ui large form">
             <div class="ui segment" style="margin:0px;">
-                <select name="crawl_id" class="ui fluid dropdown">
+                <select name="index_name" class="ui fluid dropdown">
                     <option value="">Select Index</option>
-                    {% for crawl_info in crawls_info %}
-                    <option value="{{ crawl_info.id }}">{{ crawl_info.id }}: {{ crawl_info.limit }}
-                        docs - started at {{ crawl_info.start }}</option>
+                    {% for index_name, index_data in indexes.items %}
+                        {% if index_data.mappings.publication %}
+                            <option value="{{ index_name }}">{{ index_name }}</option>
+                        {% endif %}
                     {% endfor %}
                 </select>
 
