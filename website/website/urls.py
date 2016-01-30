@@ -26,4 +26,6 @@ urlpatterns = [
     url(r'^indexing/authors/$', 'search.views.indexing_authors'),
     url(r'^indexing/status/(?P<id>\d+)/$', 'search.views.indexing_status_page'),
     url(r'^search/$', 'search.views.search_page'),
+    url(r'^clustering/authors/result/$', 'clustering.views.author_clustering_result'),
+    url(r'^calculate/pagerank/$', 'search.views.calculate_pagerank'),
 ]

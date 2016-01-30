@@ -37,7 +37,7 @@ class InformationDownloader:
         return int(right_hand_side.split("_")[0])
 
     @staticmethod
-    def get_html_content(url):
+    def get_html_content(url, return_response_url=False):
 
         # print("<<<  " + url)
 
@@ -59,6 +59,8 @@ class InformationDownloader:
         if requests.utils.dict_from_cookiejar(r.cookies):
             InformationDownloader.cookies = requests.utils.dict_from_cookiejar(r.cookies)
         InformationDownloader.referer = url
+        if return_response_url:
+            return r.text, r.url
         return r.text
 
     @staticmethod
@@ -166,14 +168,20 @@ class InformationParser:
         return ids
 
     @staticmethod
-    def get_author_info(author_id):
+    def get_author_info(author_id, forced_url=None):
         publication_ids = set()
         co_author_ids = []
         name = None
         page = 1
         while True:
-            url = "https://www.researchgate.net/researcher/%d/publications/%d" % (author_id, page)
-            content = InformationDownloader.get_html_content(url)
+            if not forced_url:
+                url = "https://www.researchgate.net/researcher/%d/publications/%d" % (author_id, page)
+            else:
+                url = "%s/publications/%d" % (forced_url, page)
+            content, new_url = InformationDownloader.get_html_content(url, True)
+            # print(new_url, "<<>>", forced_url)
+            if forced_url is None and "/publications" not in new_url:
+                return InformationParser.get_author_info(author_id, new_url)
             soup = BeautifulSoup(content, 'html.parser')
 
             previous_publication_ids = set(publication_ids)
@@ -190,8 +198,7 @@ class InformationParser:
             else:
                 name = name or soup.select(".profile-header-name span")[0].string
 
-                link_descs = soup.find_all(class_='publication-type',
-                                           string=["%s:" % pub_type for pub_type in Statics.allowed_publication_types])
+                link_descs = soup.find_all(class_='publication-type')
                 if len(link_descs) == 0:
                     break
 

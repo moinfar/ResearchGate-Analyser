@@ -5,4 +5,5 @@ beautifulsoup4==4.4.1
 redis==2.10.5
 flower==0.8.4
 elasticsearch>=2.0.0,<3.0.0
+numpy==1.10.4
 
