@@ -54,22 +54,39 @@ def search_page(request):
         # }
         if request.GET.get('cluster_label') is not None and request.GET.get('cluster_label') != 'all':
             search_query = {
-                "query": {
-                    "bool": {
-                        "should": [
+                'query': {
+                    'function_score': {
+                        'functions': [
                             {
-                                "match": {
-                                    "cluster_label":    request.GET.get('cluster_label')
+                                'script_score': {
+                                    'script': "%s * doc['PR'].value" % w_page_rank
                                 }
-                            },
-                            {
-                                "multi_match": {
-                                    "query":    q,
-                                    "type":     "cross_fields",
-                                    "fields":   ["title^%s" % w_title, "abstract^%s" % w_abstract, "authors.name^%s" % w_authors]
-                                },
-                            },
-                        ]
+                            }
+                        ],
+                        "query": {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "match": {
+                                            "cluster_label":    request.GET.get('cluster_label')
+                                        }
+                                    },
+                                    {
+                                        "multi_match": {
+                                            "query":    q,
+                                            "type":     "cross_fields",
+                                            "fields":   ["title^%s" % w_title, "abstract^%s" % w_abstract, "authors.name^%s" % w_authors]
+                                        },
+                                    },
+                                ]
+                            }
+                        },
+                        'filter': {
+                            'exists': {
+                                'field': 'PR'
+                            }
+                        },
+                        'score_mode': 'sum',
                     }
                 },
                 "size": limit,
@@ -102,21 +119,6 @@ def search_page(request):
                 },
                 "size": limit,
             }
-            # search_query = {
-            #     "query": {
-            #         "custom_score": {
-            #             "query": {
-            #                 "multi_match": {
-            #                     "query":    q,
-            #                     "type":     "cross_fields",
-            #                     "fields":   ["title^%s" % w_title, "abstract^%s" % w_abstract, "authors.name^%s" % w_authors]
-            #                 },
-            #             },
-            #             "script": "_score * 2"
-            #         }
-            #     },
-            #     "size": limit,
-            # }
 
         res = es.search(index="global-index", body=search_query)
         result = res['hits']
