@@ -90,7 +90,8 @@ def search_page(request):
         result = res['hits']
         clusters = {}
         for r in res['hits']['hits']:
-            clusters[r['_source']['cluster_id']] = r['_source']['cluster_label']
+            if 'cluster_id' in r['_source']:
+                clusters[r['_source']['cluster_id']] = r['_source']['cluster_label']
 
     return render(request, 'search.html', {'request': request, 'result': result, 'clusters': clusters})
 
