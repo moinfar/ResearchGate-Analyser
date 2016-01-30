@@ -28,7 +28,7 @@ def search_page(request):
         w_page_rank = request.GET.get('PR_weight')
         limit = request.GET.get('limit', 30)
         es = Elasticsearch()
-        es.indices.refresh(index="index-20")
+        es.indices.refresh(index="global-index")
         # search_query = {
         #     "query": {
         #         "bool": {
@@ -83,7 +83,7 @@ def search_page(request):
                 "size": limit,
             }
 
-        res = es.search(index="index-20", body=search_query)
+        res = es.search(index="global-index", body=search_query)
         result = res['hits']
         clusters = {}
         for r in res['hits']['hits']:

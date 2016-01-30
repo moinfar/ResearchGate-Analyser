@@ -63,7 +63,7 @@ def retrieve_dataset(index_name, doc_type, weight={'title': 5, 'abstract': 1}):
     return dataset
 
 
-def find_clusters(dataset, dci, C=30):  # dci is a DocumentClusteringInfo
+def find_clusters(dataset, dci, C=100):  # dci is a DocumentClusteringInfo
     k = 3
     best_k = 3
     cost = float("inf")
