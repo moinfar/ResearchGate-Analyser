@@ -72,11 +72,6 @@ def find_clusters(dataset, dci, C=100):  # dci is a DocumentClusteringInfo
         old_cost = cost
         means, d = KMeans.compute_means(dataset, k, dci)
         cost = k*C + d
-        print(old_cost)
-        print(cost)
-        print(k)
-        print(dci.iter)
-        print('$')
         if old_cost > cost:
             best_k = k
         if k - best_k > 2:

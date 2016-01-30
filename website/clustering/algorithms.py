@@ -161,9 +161,6 @@ class KMeans:
             cost = 0
             cluster_count = [0]*k
 
-            print('^^^^^^^^^^^^^^^^^^^^^')
-            print('iteration {}:'.format(dci.iter))
-
             for data in dataset:
                 closest_dist = float("inf")
                 data.cluster_id = -1
@@ -189,10 +186,8 @@ class KMeans:
                 break
 
             for i in range(k):
-                print("Cluster {}:\t{}".format(i, cluster_count[i]))
                 old_means[i] = means[i].copy()
                 means[i] = cluster_sum[i]
-            print(cost)
 
             for i in range(k):
                 if cluster_count[i] < len(dataset) / 10.0 / k and dci.iter < 15:
