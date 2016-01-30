@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'crawler',
     'search',
+    'clustering_pubs',
     'clustering',
 )
 

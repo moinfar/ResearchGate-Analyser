@@ -2,6 +2,8 @@ import os
 import json
 import numpy
 import heapq
+import random
+from math import sqrt
 
 from pprint import pprint
 
@@ -112,7 +114,90 @@ class AverageLinkClustering:
         return clusters, cluster_map
 
 
+class KMeans:
+    @staticmethod
+    def inner_product(a, b):
+        if len(a) > len(b):
+            return KMeans.inner_product(b, a)
 
+        r = 0
+        for key in a:
+            if key in b:
+                r += a[key] * b[key]
+        return r
 
+    @staticmethod
+    def dist(a, b):
+        r = 0
+        for key in a:
+            if key in b:
+                r += (a[key] - b[key]) * (a[key] - b[key])
+            else:
+                r += a[key] * a[key]
+        for key in b:
+            if key not in a:
+                r += b[key] * b[key]
+        return r
 
+    @staticmethod
+    def compute_means(dataset, k, dci, thrsh=1):        # dci is a DocumentClusteringInfo
+        dci.k = k
+        dci.iter = 0
+        dci.save()
 
+        # means = [{} for i in range(k)]
+        # for data in dataset:
+        #     for term in data.tf:
+        #         for i in range(k):
+        #             means[i][term] = random.randint(0, 4)
+        means = [doc_inf.tf.copy() for doc_inf in random.sample(dataset, k)]
+        old_means = [{} for i in range(k)]
+
+        cost = float("inf")
+        while True:
+            dci.iter += 1
+            dci.save()
+            old_cost = cost
+            cost = 0
+            cluster_count = [0]*k
+
+            print('^^^^^^^^^^^^^^^^^^^^^')
+            print('iteration {}:'.format(dci.iter))
+
+            for data in dataset:
+                closest_dist = float("inf")
+                data.cluster_id = -1
+                for i in range(0, k):
+                    d = KMeans.dist(means[i], data.tf)
+                    if d < closest_dist:
+                        closest_dist = d
+                        data.cluster_id = i
+                cluster_count[data.cluster_id] += 1
+                cost += sqrt(closest_dist)
+            dci.cost = cost
+            dci.save()
+
+            cluster_sum = [{} for i in range(k)]
+            for data in dataset:
+                for key in data.tf:
+                    if key not in cluster_sum[data.cluster_id]:
+                        cluster_sum[data.cluster_id][key] = data.tf[key]*1.0 / cluster_count[data.cluster_id]
+                    else:
+                        cluster_sum[data.cluster_id][key] += data.tf[key]*1.0 / cluster_count[data.cluster_id]
+
+            if old_cost - cost < thrsh:
+                break
+
+            for i in range(k):
+                print("Cluster {}:\t{}".format(i, cluster_count[i]))
+                old_means[i] = means[i].copy()
+                means[i] = cluster_sum[i]
+            print(cost)
+
+            for i in range(k):
+                if cluster_count[i] < len(dataset) / 10.0 / k and dci.iter < 15:
+                    means = [doc_inf.tf.copy() for doc_inf in random.sample(dataset, k)]
+                    cost = float("inf")
+                    break
+
+        return old_means, old_cost

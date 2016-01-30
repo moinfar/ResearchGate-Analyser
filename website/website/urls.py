@@ -17,15 +17,17 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 urlpatterns = [
-    # url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', include(admin.site.urls)),
     url(r'^$', 'search.views.home_page'),
     url(r'^crawl/$', 'crawler.views.crawl_page'),
     url(r'^crawl/authors/$', 'crawler.views.crawl_author_page'),
     url(r'^crawl/status/(?P<id>\d+)/$', 'crawler.views.crawl_status_page'),
     url(r'^indexing/$', 'search.views.indexing_page'),
-    url(r'^indexing/authors/$', 'search.views.indexing_authors'),
     url(r'^indexing/status/(?P<id>\d+)/$', 'search.views.indexing_status_page'),
-    url(r'^search/$', 'search.views.search_page'),
+    url(r'^indexing/authors/$', 'search.views.indexing_authors'),
     url(r'^clustering/authors/result/$', 'clustering.views.author_clustering_result'),
+    url(r'^search/$', 'search.views.search_page'),
+    url(r'^clustering_pubs/$', 'clustering_pubs.views.clustering_pubs_page'),
+    url(r'^clustering_pubs/status/(?P<index_name>[a-z0-9-]+)/$', 'clustering_pubs.views.clustering_pubs_status_page'),
     url(r'^calculate/pagerank/$', 'search.views.calculate_pagerank'),
 ]

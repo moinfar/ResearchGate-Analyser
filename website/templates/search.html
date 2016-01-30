@@ -100,10 +100,31 @@
                     </div>
                 </div>
                 <p></p>
+                {% if clusters %}
+                <div class="ui grid container">
+                    <div class="twelve wide column">
+                        <div class="ui fluid action input">
+                            <input name="q" type="text" placeholder="Search..." value="{{ request.GET.q }}">
+                            <button class="ui grey button">Search</button>
+                        </div>
+                    </div>
+                    <div class="four wide column">
+                        <div class="ui fluid input">
+                            <select name="cluster_label" class="ui fluid dropdown">
+                                <option value="all">Cluster: All</option>
+                                {% for id, label in clusters.items %}
+                                <option id="{{ id }}" value="{{ label }}">Category: {{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
                 <div class="ui fluid action input">
                     <input name="q" type="text" placeholder="Search..." value="{{ request.GET.q }}">
                     <button class="ui grey button">Search</button>
                 </div>
+                {% endif %}
             </div>
         </form>
 
@@ -136,6 +157,9 @@
                         </div>
                         <div class="left floated meta">
                             ResearchGate ID: {{ item|get:"_source"|get:"id"}} &nbsp;&nbsp;&nbsp;&nbsp;
+                        </div>
+                        <div class="left floated meta">
+                            Category: {{ item|get:"_source"|get:"cluster_label"}} &nbsp;&nbsp;&nbsp;&nbsp;
                         </div>
                         <div class="right floated meta">
                             PageRank: 10

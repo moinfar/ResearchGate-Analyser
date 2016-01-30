@@ -35,7 +35,7 @@ def crawl_status_page(request, id):
 
     if request.GET.get('type', 'HTML') == 'JSON':
         result = json.dumps({'status': 'OK', 'percent': max(1, int(100*crawled_pages_num/crawl_info.limit))},
-                            ensure_ascii=False, encoding='utf8')
+                            ensure_ascii=False)
         return HttpResponse(result, content_type='application/json; charset=utf-8')
 
     return render(request, 'crawl_status.html', {'percent': max(1, int(100*crawled_pages_num/crawl_info.limit))})

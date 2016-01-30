@@ -19,6 +19,7 @@ def home_page(request):
 
 def search_page(request):
     result = None
+    clusters = None
     if request.GET.get('q') is not None and request.GET.get('q') != '':
         q = request.GET.get('q')
         w_title = request.GET.get('title_weight')
@@ -27,7 +28,7 @@ def search_page(request):
         w_page_rank = request.GET.get('PR_weight')
         limit = request.GET.get('limit', 30)
         es = Elasticsearch()
-        es.indices.refresh(index="global-index")
+        es.indices.refresh(index="index-20")
         # search_query = {
         #     "query": {
         #         "bool": {
@@ -48,20 +49,47 @@ def search_page(request):
         #         }
         #     }
         # }
-        search_query = {
-            "query": {
-                "multi_match": {
-                    "query":    q,
-                    "type":     "cross_fields",
-                    "fields":   ["title^%s" % w_title, "abstract^%s" % w_abstract, "authors.name^%s" % w_authors]
-                }
-            },
-            "size": limit,
-        }
-        res = es.search(index="global-index", body=search_query)
-        result = res['hits']
+        if request.GET.get('cluster_label') is not None and request.GET.get('cluster_label') != 'all':
+            search_query = {
+                "query": {
+                    "bool": {
+                        "should": [
+                            {
+                                "match": {
+                                    "cluster_label":    request.GET.get('cluster_label')
+                                }
+                            },
+                            {
+                                "multi_match": {
+                                    "query":    q,
+                                    "type":     "cross_fields",
+                                    "fields":   ["title^%s" % w_title, "abstract^%s" % w_abstract, "authors.name^%s" % w_authors]
+                                },
+                            },
+                        ]
+                    }
+                },
+                "size": limit,
+            }
+        else:
+            search_query = {
+                "query": {
+                    "multi_match": {
+                        "query":    q,
+                        "type":     "cross_fields",
+                        "fields":   ["title^%s" % w_title, "abstract^%s" % w_abstract, "authors.name^%s" % w_authors]
+                    },
+                },
+                "size": limit,
+            }
 
-    return render(request, 'search.html', {'request': request, 'result': result})
+        res = es.search(index="index-20", body=search_query)
+        result = res['hits']
+        clusters = {}
+        for r in res['hits']['hits']:
+            clusters[r['_source']['cluster_id']] = r['_source']['cluster_label']
+
+    return render(request, 'search.html', {'request': request, 'result': result, 'clusters': clusters})
 
 
 def indexing_page(request):
